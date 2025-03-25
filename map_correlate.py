@@ -4,6 +4,7 @@
 '''
 sometimes part of an image may be copied / mapped somewhere else, e.g. idata data copied into ram.
 
+this script sucks
 This script tries to guess a likely offset, given 
 1- a range in undefined memory (e.g. RAM or unknown) where ghidra found xrefs leading to
 2- a range in initialized mem (usually ROM) that has been analyzed and has symbols defined
@@ -51,7 +52,7 @@ s_filtered = []
 for s in symb:
     # check only Function symbols, that will fit in the 'undefined' window
     if s.getSymbolType() != ghidra.program.model.symbol.SymbolType.FUNCTION:
-        continue
+        pass
     s_filtered.append(s)
 
 for offs in range(min_offs, max_offs, 2):
@@ -59,8 +60,8 @@ for offs in range(min_offs, max_offs, 2):
     points = 0
     for s in s_filtered:
         iaddr = s.getAddress()
-        if iaddr >= iend:
-#        if 0:
+#        if iaddr >= iend:
+        if 0:
             break
         i_pos = iaddr.subtract(istart)
         tgt_addr = ustart.add(offs).add(i_pos)
