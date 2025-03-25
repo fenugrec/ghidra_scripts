@@ -42,17 +42,19 @@ sm = currentProgram.getSymbolTable()
 scores=[]
 best_idx = 0
 new_best = 1
-print min_offs
-print wlen
-print iend
+# first, filter symlist of initialized data
+symb = sm.getSymbolIterator(istart, 1)
+s_filtered = []
+for s in symb:
+    # check only Function symbols, that will fit in the 'undefined' window
+    if s.getSymbolType() != ghidra.program.model.symbol.SymbolType.FUNCTION:
+        continue
+    s_filtered.append(s)
+
 for offs in range(0, wlen, 2):
     #for each offset, calculate 'score' of matching # of syms
     points = 0
-    symb = sm.getSymbolIterator(istart, 1)
-    for s in symb:
-        # check only Function symbols, that will fit in the 'undefined' window
-        if s.getSymbolType() != ghidra.program.model.symbol.SymbolType.FUNCTION:
-            continue
+    for s in s_filtered:
         iaddr = s.getAddress()
         if iaddr >= iend:
 #        if 0:
@@ -70,4 +72,5 @@ for offs in range(0, wlen, 2):
         new_best = points
         best_idx = len(scores)-1
 
+print "mapping %x to %x: " % (istart.offset, ustart.offset)
 print scores[best_idx]
