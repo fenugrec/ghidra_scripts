@@ -22,6 +22,7 @@ avals=GVM()
 avals.defineAddress("undefined start", currentProgram)
 avals.defineAddress("undefind end", currentProgram)
 avals.defineAddress("initialized start", currentProgram)
+avals.defineAddress("initialized end", currentProgram)
 
 #TODO maybe: use 'validator' feature
 
@@ -29,14 +30,16 @@ vals = askValues('map correlator', None, avals)
 ustart = vals.getAddress("undefined start");
 uend = vals.getAddress("undefind end");
 istart = vals.getAddress("initialized start");
+iend = vals.getAddress("initialized end");
 
-if (ustart > uend):
+if (ustart > uend) or (istart > iend):
     print "Error : start > end"
     exit
 
 wlen = uend.subtract(ustart)
-iend = istart.add(wlen)
 min_offs = ustart.subtract(istart)
+min_offs = ustart.subtract(iend)
+max_offs = uend.subtract(istart)
 
 sm = currentProgram.getSymbolTable()
 scores=[]
@@ -51,7 +54,7 @@ for s in symb:
         continue
     s_filtered.append(s)
 
-for offs in range(0, wlen, 2):
+for offs in range(min_offs, max_offs, 2):
     #for each offset, calculate 'score' of matching # of syms
     points = 0
     for s in s_filtered:
