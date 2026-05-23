@@ -8,6 +8,8 @@
 #
 # jython vs pyghidra : ref https://github.com/NationalSecurityAgency/ghidra/issues/8555
 #
+# TODO : maybe handle SYMCR.MM bit (once, during load)
+
 # @author: fenugrec
 # @category: mc68k
 # @runtime Jython
@@ -17,8 +19,6 @@ import collections
 import csv
 import os	#for os.path.join
 import glob
-
-module_baseaddr = 0xfffff000    # TODO : baseaddr should depend on 'MM' bit in SIMCR
 
 # @dataclass
 # class mmio_area():
@@ -63,7 +63,7 @@ def mmioblock_helper(base, offs, len, name):
 
 # define MMIO areas
 # TODO : baseaddr should depend on 'MM' bit in SIMCR
-def create_iomap(module_baseaddr = 0xfffff000):
+def create_iomap(module_baseaddr):
     mmioblock_helper(module_baseaddr, 0xa00, 0x80, 'SIM')
     mmioblock_helper(module_baseaddr, 0xb00, 0x40, 'TPURAM_CTL')
     mmioblock_helper(module_baseaddr, 0xc00, 0x200, 'QSM')
@@ -87,14 +87,18 @@ def define_regs(base, csv_filename):
             if width == 8:
                 createData(addr, ByteDataType())
             if width == 16:
-                print('sldkfnsldkn 16')
                 createData(addr, WordDataType())
             if width == 32:
                 createData(addr, LongDataType())
 
 def main():
     csvfile = get_builtin_defs()
-    create_iomap()
+    MM_bit = 1  # default on reset. could prompt user also
+    module_baseaddr = 0x7ff000 + (MM_bit << 23)
+    if askYesNo('address size', 'depending on compiler, MMIO addresses could be sign-extend to 32-bit (e.g. 0xfffffa00),\n'
+                'or used as 24-bit (e.g. 0xfffa00). Use 32-bit addresses ?'):
+        module_baseaddr += (0xff << 24)
+    create_iomap(module_baseaddr)
     define_regs(module_baseaddr, csvfile)
     return
 
