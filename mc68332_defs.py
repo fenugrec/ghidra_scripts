@@ -1,16 +1,16 @@
-# @runtime Jython
-
-# mc68332 addr space + mmio regs (TODO) initializer
+# mc68332 addr space + mmio regs initializer
 #
-# jython vs pyghidra : ref https://github.com/NationalSecurityAgency/ghidra/issues/8555
 
 # (c) 2026 fenugrec
 # GPLv3
 #
 # Preferably run this immediately after importing the ROM dump, before running auto-analysis or doing any work.
 #
+# jython vs pyghidra : ref https://github.com/NationalSecurityAgency/ghidra/issues/8555
+#
 # @author: fenugrec
 # @category: mc68k
+# @runtime Jython
 
 import collections
 #from dataclasses import dataclass crap, doesnt work with jython ?
@@ -72,16 +72,25 @@ def create_iomap(module_baseaddr = 0xfffff000):
 
 #open definitions file and apply at base address
 def define_regs(base, csv_filename):
+    from ghidra.program.model.data import ByteDataType, WordDataType, LongDataType
     with open(csv_filename, 'rb') as f:
         reader = csv.DictReader(f)
         for row in reader:
             offs = int(row['base_offset'], base=16)
             regname = row['regname']
+            width = int(row['width'])
 
 			# create as Primary label
             addr = toAddr(base + offs)
             createLabel(addr, regname, 1)
             setEOLComment(addr, row['comment'])
+            if width == 8:
+                createData(addr, ByteDataType())
+            if width == 16:
+                print('sldkfnsldkn 16')
+                createData(addr, WordDataType())
+            if width == 32:
+                createData(addr, LongDataType())
 
 def main():
     csvfile = get_builtin_defs()
