@@ -72,7 +72,6 @@ def create_iomap(module_baseaddr):
 
 #open definitions file and apply at base address
 def define_regs(base, csv_filename):
-    from ghidra.program.model.data import ByteDataType, WordDataType, LongDataType
     with open(csv_filename, 'rb') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -84,12 +83,13 @@ def define_regs(base, csv_filename):
             addr = toAddr(base + offs)
             createLabel(addr, regname, 1)
             setEOLComment(addr, row['comment'])
+            removeDataAt(addr)
             if width == 8:
-                createData(addr, ByteDataType())
+                createByte(addr)
             if width == 16:
-                createData(addr, WordDataType())
+                createWord(addr)
             if width == 32:
-                createData(addr, LongDataType())
+                createDWord(addr)
 
 def main():
     csvfile = get_builtin_defs()
@@ -98,7 +98,9 @@ def main():
     if askYesNo('address size', 'depending on compiler, MMIO addresses could be sign-extend to 32-bit (e.g. 0xfffffa00),\n'
                 'or used as 24-bit (e.g. 0xfffa00). Use 32-bit addresses ?'):
         module_baseaddr += (0xff << 24)
-    create_iomap(module_baseaddr)
+
+    if askYesNo('mem blocks', 'Create mem blocks ? (skip only if already existing)'):
+        create_iomap(module_baseaddr)
     define_regs(module_baseaddr, csvfile)
     return
 
